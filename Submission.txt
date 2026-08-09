@@ -1,0 +1,237 @@
+Name: Omm Biswal; Roll Number - 2411122
+
+Q1: 1. Calculate the sum of first 20 even numbers and factorial of 8. (using do-while
+or for or any other loop).
+
+---
+k = 0
+m = 2
+sum = 0
+fact = 1
+n = 8
+while True:
+	if m%2 == 0:
+		sum +=m
+		m+=2
+		k+=1
+	if k==20:
+		break
+while (n!=1):
+	fact*=n
+	n-=1
+print(f"Sum of first 20 even numbers: {sum}")
+print(f"Factorial of 8 is: {fact}")
+---
+
+Sum of first 20 even numbers: 420
+Factorial of 8 is: 40320
+
+---
+
+Q.2: Calculate the sum of N = 15 terms of a GP and HP series for common difference
+1.5 and common ratio 0.5 starting from t0 = 1.25. Use of analytical formulae is
+not allowed.
+
+---
+t0 = 1.25
+cd = 1.5
+cr = 0.5
+HP_t = t0
+GP_t = t0
+HP_s = t0
+GP_s = t0
+
+for _ in range(14):
+	HP_t += cd
+	GP_t *= cr
+	HP_s += float(1/HP_t)
+	GP_s += GP_t
+print(f"GP sum: {GP_s} \nHP sum: {HP_s}")
+---
+
+GP sum: 2.4999237060546875
+HP sum: 2.8639570733659188
+
+---
+
+Q.3. Consider the following matrices. Find AB, D · C and BC.
+
+---
+A = []
+B = []
+C = []
+D = []
+
+with open("asgn0_matA", "r") as file:
+	for line in file:
+		A.append(list(map(float, line.strip().split())))
+
+with open("asgn0_matB", "r") as file:
+	for line in file:
+		B.append(list(map(float, line.strip().split())))
+with open("asgn0_vecC", "r") as file:
+        for line in file:
+                C.append(float(line))
+with open("asgn0_vecD", "r") as file:
+        for line in file:
+                D.append(float(line))
+AB = []
+for i in range(len(A)):
+	row = []
+	for j in range(len(B[0])):
+		sum = 0
+		for k in range(len(A[0])):
+			sum += A[i][k] * B[k][j]
+		row.append(round(sum, 3))
+	AB.append(row)
+BC = []
+for i in range(len(B)):
+        row = []
+        for j in range(1):
+                sum = 0
+                for k in range(len(B[0])):
+                        sum += B[i][k] * C[k]
+                row.append(round(sum, 3))
+        BC.append(row)
+D_T = [D]
+DC = []
+for i in range(len(D_T)):
+        row = []
+        for j in range(1):
+                sum = 0
+                for k in range(len(D_T[0])):
+                        sum += D_T[i][k] * C[k]
+                row.append(round(sum, 3))
+        DC.append(row)
+
+print("AB")
+for i in AB:
+	print(i)
+print()
+print("BC")
+for i in BC:
+	print(i)
+print()
+print("D . C")
+for i in DC:
+	print(i)
+---
+
+AB
+[-0.3, -3.5, 5.2]
+[-4.5, -2.0, 4.5]
+[9.3, 0.8, -7.0]
+
+BC
+[1.0]
+[-5.75]
+[-9.0]
+
+D . C
+[-3.5]
+
+---
+Q4. In 3-dimension Cartesian coordinate system with axes (x, y, z) ≡ (0, 1, 2), the
+permutation matrix that exchanges μ ↔ ν (where μ, ν = x, y, z or 0, 1, 2) is
+given by
+---
+
+def delta(i, j):
+	if (i==j):
+		return 1
+	else:
+		return 0
+
+def perm_matrix(mu, nu):
+    matrix = []
+    for i in range(3):
+        row = []
+        for j in range(3):
+            element = (delta(i, j)- delta(i, mu) * delta(j, mu)- delta(i, nu) * delta(j, nu)+ delta(i, mu) * delta(j, nu)+ delta(i, nu) * delta(j, mu))
+            row.append(element)
+        matrix.append(row)
+    return matrix
+
+A_xy = perm_matrix(0, 1)
+A_zy = perm_matrix(2, 1)
+A_xz = perm_matrix(0, 2)
+
+print("A_xy")
+for row in A_xy:
+    print(row)
+print()
+
+print("A_zy")
+for row in A_zy:
+    print(row)
+print()
+
+print("A_xz")
+for row in A_xz:
+    print(row)
+---
+A_xy
+[0, 1, 0]
+[1, 0, 0]
+[0, 0, 1]
+
+A_zy
+[1, 0, 0]
+[0, 0, 1]
+[0, 1, 0]
+
+A_xz
+[0, 0, 1]
+[0, 1, 0]
+[1, 0, 0]
+---
+
+Q.5. Define MyComplex class / structure and calculate the sum, difference, product
+and modulus of (1.3 − 2.2j) and (−0.8 + 1.7j).
+---
+
+import math
+class MyComplex:
+    def __init__(self, real: float, imag: float):
+        self.real = real
+        self.imag = imag
+
+    def __repr__(self) -> str:
+        sign = "+" if self.imag >= 0 else "-"
+        return f"MyComplex({self.real}, {self.imag})"
+
+    def __str__(self) -> str:
+        sign = "+" if self.imag >= 0 else "-"
+        return f"{self.real} {sign} {abs(self.imag)}j"
+
+    def modulus(self) -> float:
+        return round(math.sqrt(self.real**2 + self.imag**2), 3)
+
+    def __add__(self, other: 'MyComplex') -> 'MyComplex':
+        return MyComplex(round(self.real + other.real, 3), round(self.imag + other.imag, 3))
+
+    def __sub__(self, other: 'MyComplex') -> 'MyComplex':
+        return MyComplex(round(self.real - other.real, 3), round(self.imag - other.imag, 3))
+
+    def __mul__(self, other: 'MyComplex') -> 'MyComplex':
+        real_part = round((self.real * other.real) - (self.imag * other.imag), 3)
+        imag_part = round((self.real * other.imag) + (self.imag * other.real), 3)
+        return MyComplex(real_part, imag_part)
+
+c1 = MyComplex(1.3, -2.2)
+c2 = MyComplex(-0.8, 1.7)
+
+print(f"Sum: {c1+c2}")
+print(f"Difference: {c1-c2}")
+print(f"Product: {c1*c2}")
+print(f"Modulus of {c1}: {c1.modulus()}")
+print(f"Modulus of {c2}: {c2.modulus()}")
+
+---
+Sum: 0.5 - 0.5j
+Difference: 2.1 - 3.9j
+Product: 2.7 + 3.97j
+Modulus of 1.3 - 2.2j: 2.555
+Modulus of -0.8 + 1.7j: 1.879
+---
+
