@@ -1,6 +1,6 @@
 seed = 42.0
 
-def PRNG():
+def PRNG():                         // Linear Congruential Generator
     global seed
     a = 1664525.0
     c = 1013904223.0
