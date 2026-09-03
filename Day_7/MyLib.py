@@ -272,6 +272,62 @@ def Regula_Falsi(f, a, b, beta=0.5, tolerance=1e-6):
 	print(f"Regula Falsi converged in {iters} iterations")
 	return a if abs(f(a)) < abs(f(b)) else b
 
+def Fixed_Point(g, x0, tolerance=1e-6, max_iter=10000):		# g(x) is the rearranged form of f(x) = 0 as x = g(x); x0 is initial guess
+	iters = 0
+	x = x0
+	while iters < max_iter:
+		x_new = g(x)
+		iters += 1
+		if abs(x_new - x) < tolerance:
+			break
+		x = x_new
+	if iters == max_iter:
+		print(f"Fixed Point did not converge in {max_iter} iterations")
+	else:
+		print(f"Fixed Point converged in {iters} iterations")
+	return x_new
+
+def Newton_Raphson(F, J, x0, tolerance=1e-6, max_iter=10000):			# it takes for both single variable and multivariable.
+	# F is list of functions for multivariable; or single function for 1D
+	# J is 2D Jacobian matrix of functions; or single derivative function for 1D
+	# x0 is the initial guess.
+	# x0 is used to determine if it's 1 var or multivar. x0 is a float if single var, and a list of floats if multivar.
+	iters = 0
+	if type(x0) is not list:				# 1D case
+		x = x0
+		while iters < max_iter:
+			fx = F(x)
+			jx = J(x)
+			x_new = x - fx/jx
+			iters += 1
+			if abs(x_new - x) < tolerance:
+				break
+			x = x_new
+		if iters == max_iter:
+			print(f"Newton-Raphson did not converge in {max_iter} iterations")
+		else:
+			print(f"Newton-Raphson converged in {iters} iterations")
+		return x_new
+	else:									# multivariable case
+		n = len(x0)
+		x = x0[:]
+		while iters < max_iter:
+			fx = [F[i](x) for i in range(n)]				# evaluates F at current x
+			Jx = [[J[i][j](x) for j in range(n)] for i in range(n)]	# evaluates Jacobian at current x
+			Jinv = invert(Jx)									# inverts J(x)
+			dx = [sum(Jinv[i][j]*fx[j] for j in range(n)) for i in range(n)]	# x_new = x - J^(-1)*x*f(x)
+			x_new = [x[i] - dx[i] for i in range(n)]
+			iters += 1
+			mag = math.sqrt(sum((x_new[i]-x[i])**2 for i in range(n)))		# norm of x, y over old x, y difference
+			if mag < tolerance:
+				break
+			x = x_new
+		if iters == max_iter:
+			print(f"Newton-Raphson did not converge in {max_iter} iterations")
+		else:
+			print(f"Newton-Raphson converged in {iters} iterations")
+		return x_new
+
 def Transpose(A):			#Transposes a given matrix
 
 	rows = len(A)

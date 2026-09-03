@@ -1,0 +1,4 @@
+Newton-Raphson converged in 5 iterations
+Starting guess: [2.0, 3.0]
+Root: x = 3.000000, y = 4.000000
+Verification: f1 = 1.42e-14, f2 = -7.11e-15

@@ -1,0 +1,2 @@
+Fixed Point converged in 14 iterations
+Fixed Point root: 3.000000,  f(root) = 7.74e-07

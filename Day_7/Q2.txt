@@ -1,0 +1,6 @@
+Bisection converged in 22 iterations
+Bisection root:     0.360422,  f(root) = -1.14e-07
+Regula Falsi converged in 11 iterations
+Regula Falsi root:  0.360422,  f(root) = 2.52e-07
+Newton-Raphson converged in 4 iterations
+Newton-Raphson root:0.360422,  f(root) = -4.44e-16
