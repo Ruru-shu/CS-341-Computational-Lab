@@ -11,7 +11,7 @@ def PRNG(seed=42.0, iter=1):
 	for i in range(iter):
 		x1 = (a * PRNG.x0 + c) % m
 		PRNG.x0 = x1
-		yield (x1/m)
+		yield x1 / m
 
 if __name__ == "__main__":
 	x = list(PRNG(42.0, 1000))

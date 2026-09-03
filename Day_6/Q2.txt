@@ -1,0 +1,4 @@
+Bisection converged in 21 iterations
+Bisection root:    2.623140,  f(root) = 7.15e-10
+Regula Falsi converged in 6 iterations
+Regula Falsi root: 2.623140,  f(root) = -8.49e-10

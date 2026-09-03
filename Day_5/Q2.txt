@@ -1,0 +1,7 @@
+Jacobi converged in 29 iterations
+Solved via Jacobi
+x: [1.0, 0.999999, 1.0, 1.0, 0.999999, 1.0]
+
+Gauss-Seidel (w=1.0) converged in 16 iterations
+Solved via Gauss_Seidel
+x: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]

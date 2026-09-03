@@ -1,0 +1,5 @@
+Bracket found(a,b): [-2.750000, 4.000000]
+f(a) = 3.674302,  f(b) = -3.346356
+
+Regula Falsi converged in 9 iterations
+Regula Falsi root: -0.739085,  f(root) = -5.79e-08

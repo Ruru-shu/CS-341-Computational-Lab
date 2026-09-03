@@ -24,10 +24,15 @@ class MyComplex:
         real_part = round((self.real * other.real) - (self.imag * other.imag), 3)
         imag_part = round((self.real * other.imag) + (self.imag * other.real), 3)
         return MyComplex(real_part, imag_part)
-def PRNG(seed=42.0, iter=1):                         #Linear Congruential Generator; Seed and number of iterations are passed in function header
+def PRNG(seed=42.0, iter=1):
 	a = 1103515245.0
 	c = 12345.0
 	m = 32768.0
+	if not hasattr(PRNG, "x0"):
+		PRNG.x0 = 42.0
+	if seed:
+		PRNG.x0 = seed
 	for i in range(iter):
-		seed = (a*seed +c) % m
-		yield float(seed/m)
+		x1 = (a * PRNG.x0 + c) % m
+		PRNG.x0 = x1
+		yield (x1/m)
