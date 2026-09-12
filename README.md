@@ -21,7 +21,7 @@ Endsem - 30
 ---
 ## Algorithms to be covered
 
-![img](/Pasted_image_20260912192335.png)
+![img](Pasted_image_20260912192335.png)
 
 RNG
 Gauss-Jordan Elimination
