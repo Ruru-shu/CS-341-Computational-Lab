@@ -251,7 +251,7 @@ For the inverse, run forward + backward substitution over each column of $I$.
 
 For **symmetric positive-definite** matrices: $A = LL^T$
 
-$$\ell_{ii} = \sqrt{a_{ii} - \sum_{j<i} \ell_{ij}^2}, \qquad \ell_{ij} = \frac{1}{\ell_{ii}}\!\left(a_{ij} - \sum_{k=0}^{i-1} \ell_{ik}\,\ell_{jk}\right),\ j > i$$
+$$\ell_{ii} = \sqrt{a_{ii} - \sum_{j < i} \ell_{ij}^2}, \qquad \ell_{ij} = \frac{1}{\ell_{ii}}\!\left(a_{ij} - \sum_{k=0}^{i-1} \ell_{ik}\,\ell_{jk}\right),\ j > i$$
 
 About **twice as fast** as plain LU. Used in covariance matrix decomposition and Monte Carlo simulation.
 
