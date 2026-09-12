@@ -21,7 +21,7 @@ Endsem - 30
 ---
 ## Algorithms to be covered
 
-![[Pasted image 20260912192335.png]]
+![img](/Pasted_image_20260912192335.png)
 
 RNG
 Gauss-Jordan Elimination
@@ -76,7 +76,7 @@ You must use magnitude of the whole vector to check for tolerance
 
 Successive Over-Relaxation method
 
-![[Pasted image 20260827153913.png]]
+![img2](Pasted_image_20260827153913.png)
 
 
 # Finding Roots
