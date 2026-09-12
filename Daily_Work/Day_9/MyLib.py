@@ -45,20 +45,31 @@ class MyComplex:
 		imag_part = round((self.real * other.imag) + (self.imag * other.real), 3)
 		return MyComplex(real_part, imag_part)
 
-def PRNG(seed=42.0, iter=1):			#Linear Congruential Generator (LCG)
+def PRNG(seed=None, iter=1):                       # Linear Congruential Generator (LCG)
 
-	a = 1103515245.0
-	c = 12345.0
-	m = 32768.0
+    # The function attribute PRNG.x0 stores the last generated value.
+    # If no seed is supplied, the previous PRNG.x0 is automatically used as the seed, allowing successive calls to continue the same sequence.
 
-	if not hasattr(PRNG, "x0"):
-		PRNG.x0 = 42.0
-	if seed:
-		PRNG.x0 = seed
-	for i in range(iter):
-		x1 = (a * PRNG.x0 + c) % m
-		PRNG.x0 = x1
-		yield (x1/m)
+    if not hasattr(PRNG, "x0"):
+        PRNG.x0 = 42                                # Initial default seed
+
+    if seed is not None:
+        PRNG.x0 = seed                              # Use explicitly supplied seed
+
+    a = 1103515245
+    c = 12345
+    m = 32768
+    numbers = []
+
+    for i in range(iter):
+        x1 = (a * PRNG.x0 + c) % m
+        PRNG.x0 = x1                               # Store last generated value
+        numbers.append(x1 / m)
+
+    if iter == 1:
+        return numbers[0]                           # Return a float
+    else:
+        return numbers                              # Return a list
 
 def GJE(A, B):     # A is the coefficient matrix; B is the whole number value of the coefficient matrix
 
