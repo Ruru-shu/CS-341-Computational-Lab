@@ -434,7 +434,7 @@ Evaluate $f$ at the **midpoint** of each sub-interval of width $h = (b-a)/N$:
 
 $$\mathcal{M}_N = h \sum_{n=1}^{N} f\!\left(x_n\right), \quad x_n = a + \left(n - \tfrac{1}{2}\right)h$$
 
-Error bound: $\displaystyle\left|\mathcal{M}_N - \mathcal{I}\right| \le \frac{(b-a)^3}{24N^2}\,|f''|_{\max}$
+Error bound: $\displaystyle\lvert\mathcal{M}_N - \mathcal{I}\rvert \le \frac{(b-a)^3}{24N^2}\,\lvert f''\rvert_{\max}$
 
 #### Trapezoidal rule
 
@@ -442,7 +442,7 @@ Connect consecutive $f(x_n)$ with straight lines:
 
 $$\mathcal{T}_N = \frac{h}{2}\!\left[f(x_0) + 2f(x_1) + \cdots + 2f(x_{N-1}) + f(x_N)\right]$$
 
-Error bound: $\displaystyle\left|\mathcal{T}_N - \mathcal{I}\right| \le \frac{(b-a)^3}{12N^2}\,|f''|_{\max}$
+Error bound: $\displaystyle\lvert\mathcal{T}_N - \mathcal{I}\rvert \le \frac{(b-a)^3}{12N^2}\,\lvert f''\rvert_{\max}$
 
 > ⚠ Surprisingly, the trapezoidal rule can be *less* accurate than midpoint for strictly concave or convex functions.
 
@@ -454,7 +454,7 @@ $$\mathcal{S}_N = \frac{h}{3}\!\left[f(x_0) + 4f(x_1) + 2f(x_2) + 4f(x_3) + \cdo
 
 Weights follow the pattern $1, 4, 2, 4, 2, \ldots, 4, 1$.
 
-Error bound: $\displaystyle\left|\mathcal{S}_N - \mathcal{I}\right| \le \frac{(b-a)^5}{180N^4}\,|f''''|_{\max}$
+$$\mathcal{S}_N = \frac{h}{3}\!\left[f(x_0) + 4f(x_1) + 2f(x_2) + 4f(x_3) + \cdots + 4f(x_{N-1}) + f(x_N)\right]$$
 
 Useful identity: $\mathcal{S}_{2N} = \tfrac{2}{3}\mathcal{M}_N + \tfrac{1}{3}\mathcal{T}_N$
 
