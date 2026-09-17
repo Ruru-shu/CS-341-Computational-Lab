@@ -1,0 +1,5 @@
+Exact value            : 0.545351
+Monte Carlo (N=10000)  : 0.549807
+First N accurate to 4dp: N = 1581, FN = 0.545376
+Plot 1 saved: Q3_FN_vs_N.png
+Plot 2 saved: Q3_sigma_vs_N.png

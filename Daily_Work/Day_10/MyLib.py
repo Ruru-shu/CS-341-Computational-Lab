@@ -471,20 +471,37 @@ def poly_str(coeff):
         terms.append(f"{coeff[i]}x^{n-i}")
     return " + ".join(terms)
 
-def Midpoint_Int(f, a, b, N=10000):
+def Midpoint_Int(f, a, b, N=10000.0):
 	h = float((b-a)/N)
 	I = 0
 	for i in range(N):
 		I += f(a + (i + 0.5)*h)*h
 	return I
 
-def Trapezoidal_Int(f, a, b, N=10000):
+def Trapezoidal_Int(f, a, b, N=10000.0):
 	h = float((b-a)/N)
 	I = 0.5*(f(a) + f(b))
 	for i in range(1, N):
 		I += f(a + i*h)
 	return I*h
 
+def Simpson_Int(f, a, b, N=10000.0):
+	h = float((b-a)/N)
+	s = f(a)+f(b)
+	for i in range(1, N):
+		x = a + i*h
+		if i % 2 == 0:
+			s+= 2*f(x)
+		else:
+			s+=4*f(x)
+	return (h/3)*s
+
+def MonteCarlo_Int(f, a, b, N=10000.0):
+	s=0
+	for i in range(N):
+		x = PRNG()*(b-a) + a
+		s+= f(x)
+	return (b-a)*s/N
 
 if __name__ == "__main__":			# Outputs all .py files in the same subfolder to .txt
 

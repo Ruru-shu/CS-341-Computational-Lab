@@ -1,0 +1,6 @@
+The value of integ12 1/x dx:
+Midpoint: 0.693147 ; Error% = 5.3898577897702915e-05%
+Simpson: 0.693147 ; Error% = -2.8084239791287742e-05%
+The value of integ01.5707963267948966 x cos x dx:
+Midpoint: 0.570797 ; Error% = -0.00012443870795410576%
+Simpson: 0.570797 ; Error% = -0.0001157193484748393%
