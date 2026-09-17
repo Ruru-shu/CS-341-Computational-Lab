@@ -4,7 +4,7 @@ def f(x):			# full integrand; Gaussian_Int multiplies by e^x internally to extra
 
 true_val = 0.59635
 
-result = Gaussian_Int(f, 0, float('inf'), n=5)
+result = Gaussian_Int(f, 0, float('inf'), 5)
 err    = abs(result - true_val) / true_val * 100
 
 print(f"Integral of e^-x/(1+x) from 0 to inf")

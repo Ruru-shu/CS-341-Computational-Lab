@@ -5,8 +5,8 @@ def f(x):
 
 true_val = 0.487495494
 
-gauss_result  = Gaussian_Int(f, -1, 1, n=4)
-simp_result   = Simpson_Int(f, -1, 1, N=60)
+gauss_result  = Gaussian_Int(f, -1, 1, 4)
+simp_result   = Simpson_Int(f, -1, 1, 60)
 
 gauss_err = abs(gauss_result - true_val) / true_val * 100
 simp_err  = abs(simp_result  - true_val) / true_val * 100

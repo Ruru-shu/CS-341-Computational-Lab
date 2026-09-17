@@ -1,0 +1,3 @@
+Integral of e^-x/(1+x) from 0 to inf
+True value             : 0.59635
+Gauss-Laguerre (n=5)  : 0.595041460    Error: 0.219425%   [5 points]

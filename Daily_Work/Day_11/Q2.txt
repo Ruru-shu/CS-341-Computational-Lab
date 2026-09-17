@@ -1,0 +1,4 @@
+Integral of x^2/(1+x^4) from -1 to 1
+True value                : 0.487495494
+Gauss-Legendre (n=4)      : 0.481572699    Error: 1.214943%   [4 points]
+Simpson's 1/3-rule (N=60) : 0.487495577    Error: 0.000017%   [60 points]

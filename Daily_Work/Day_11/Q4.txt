@@ -1,0 +1,3 @@
+Integral of e^-x * x^4 from 0 to inf
+Analytical value (4!)  : 24
+Gauss-Laguerre (n=4)  : 23.698798500    Error: 1.255006%   [4 points]
