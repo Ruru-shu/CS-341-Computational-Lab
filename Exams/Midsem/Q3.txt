@@ -1,0 +1,3 @@
+Newton-Raphson converged in 4 iterations
+Newton-Raphson root:4.965114231744276,  f(root) = -3.9968028886505635e-14
+The value of Wein's constant(b): 0.0029
