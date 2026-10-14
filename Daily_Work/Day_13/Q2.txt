@@ -1,0 +1,2 @@
+h = 0.05: max |RK4 - analytical| = 4.369e-04
+h = 0.15: max |RK4 - analytical| = 2.237e-02

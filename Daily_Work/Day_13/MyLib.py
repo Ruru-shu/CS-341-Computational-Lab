@@ -575,80 +575,6 @@ def MonteCarlo_Int(f, a, b, N=10000):
 		s+= f(x)
 	return (b-a)*s/N
 
-def Euler_Fwd(f, x0, y0, x_end, h, tolerance=None):		# Forward (explicit) Euler for dy/dx = f(x, y); returns lists xs, ys
-	# tolerance=None (default): plain Forward Euler. If given, each step is redone with 2, 4, 8... sub-steps until the result stops changing by tolerance
-	xs = [x0]
-	ys = [y0]
-	x = x0
-	y = y0
-	while x < x_end - 1e-12:
-		step = min(h, x_end - x)		# last step is clipped to land exactly on x_end
-		y_new = y + step*f(x, y)
-		if tolerance is not None:
-			m = 1
-			change = tolerance + 1
-			while change >= tolerance and m < 1024:
-				m = 2*m
-				x_try = x
-				y_try = y
-				for k in range(m):
-					y_try += (step/m)*f(x_try, y_try)
-					x_try += step/m
-				change = abs(y_try - y_new)
-				y_new = y_try
-		x += step
-		y = y_new
-		xs.append(x)
-		ys.append(y)
-	return xs, ys
-
-def Euler_Bkwd(f, x0, y0, x_end, h, tolerance=1e-8):		# Backward (implicit) Euler for dy/dx = f(x, y); returns lists xs, ys
-	# each step solves y_(n+1) = y_n + h*f(x_(n+1), y_(n+1)) using Newton_Raphson(); tolerance is passed on to it
-	xs = [x0]
-	ys = [y0]
-	x = x0
-	y = y0
-	while x < x_end - 1e-12:
-		step = min(h, x_end - x)
-		x1 = x + step
-		def G(z):
-			return z - y - step*f(x1, z)
-		def dG(z):
-			return 1 - step*(f(x1, z + 1e-6) - f(x1, z - 1e-6))/2e-6
-		z = Newton_Raphson(G, dG, y + step*f(x, y), tolerance, 100, False)
-		if abs(G(z)) > 1e-6:
-			break
-		x = x1
-		y = z
-		xs.append(x)
-		ys.append(y)
-	return xs, ys
-
-def Predictor_Corrector(f, x0, y0, x_end, h, tolerance=None):		# Euler predictor + trapezoidal corrector; returns lists xs, ys
-	# tolerance=None (default): corrector applied once per step. If given, corrector is repeated until it changes by less than tolerance
-	xs = [x0]
-	ys = [y0]
-	x = x0
-	y = y0
-	while x < x_end - 1e-12:
-		step = min(h, x_end - x)
-		x1 = x + step
-		slope = f(x, y)
-		y_pred = y + step*slope							# predictor (Forward Euler)
-		y_new = y + 0.5*step*(slope + f(x1, y_pred))		# corrector (trapezoidal)
-		if tolerance is not None:
-			for i in range(100):
-				y_next = y + 0.5*step*(slope + f(x1, y_new))
-				change = abs(y_next - y_new)
-				y_new = y_next
-				if change < tolerance:
-					break
-		x = x1
-		y = y_new
-		xs.append(x)
-		ys.append(y)
-	return xs, ys
-
 def Gaussian_Int(f, a, b, n=5):		# Gauss-Legendre for finite [a,b]; Gauss-Laguerre when b=float('inf')
 	# n is the number of nodes, 1 to 10
 	legendre = {		# Legendre nodes and weights on [-1, 1] for n = 1 to 10
@@ -729,7 +655,117 @@ def Gaussian_Int(f, a, b, n=5):		# Gauss-Legendre for finite [a,b]; Gauss-Laguer
 		half  = (b - a) / 2.0			# (b-a)/2 scale
 		return half * sum(weights[i] * f(half * nodes[i] + mid) for i in range(n))
 
-if __name__ == "__main__":			# Outputs all .py files in the same subfolder to .txt, and the matplotlib figures they make to .png
+def Euler_Fwd(f, x0, y0, x_end, h, tolerance=None):		# Forward (explicit) Euler for dy/dx = f(x, y); returns lists xs, ys
+	# tolerance=None (default): plain Forward Euler. If given, each step is redone with 2, 4, 8... sub-steps until the result stops changing by tolerance
+	xs = [x0]
+	ys = [y0]
+	x = x0
+	y = y0
+	while x < x_end - 1e-12:
+		step = min(h, x_end - x)		# last step is clipped to land exactly on x_end
+		y_new = y + step*f(x, y)
+		if tolerance is not None:
+			m = 1
+			change = tolerance + 1
+			while change >= tolerance and m < 1024:
+				m = 2*m
+				x_try = x
+				y_try = y
+				for k in range(m):
+					y_try += (step/m)*f(x_try, y_try)
+					x_try += step/m
+				change = abs(y_try - y_new)
+				y_new = y_try
+		x += step
+		y = y_new
+		xs.append(x)
+		ys.append(y)
+	return xs, ys
+
+def Euler_Bkwd(f, x0, y0, x_end, h, tolerance=1e-8):		# Backward (implicit) Euler for dy/dx = f(x, y); returns lists xs, ys
+	# each step solves y_(n+1) = y_n + h*f(x_(n+1), y_(n+1)) using Newton_Raphson(); tolerance is passed on to it
+	xs = [x0]
+	ys = [y0]
+	x = x0
+	y = y0
+	while x < x_end - 1e-12:
+		step = min(h, x_end - x)
+		x1 = x + step
+		def G(z):
+			return z - y - step*f(x1, z)
+		def dG(z):
+			return 1 - step*(f(x1, z + 1e-6) - f(x1, z - 1e-6))/2e-6
+		z = Newton_Raphson(G, dG, y + step*f(x, y), tolerance, 100, False)
+		if abs(G(z)) > 1e-6:
+			break
+		x = x1
+		y = z
+		xs.append(x)
+		ys.append(y)
+	return xs, ys
+
+def Predictor_Corrector(f, x0, y0, x_end, h, tolerance=None):		# Euler predictor + trapezoidal corrector; returns lists xs, ys
+	# tolerance=None (default): corrector applied once per step. If given, corrector is repeated until it changes by less than tolerance
+	xs = [x0]
+	ys = [y0]
+	x = x0
+	y = y0
+	while x < x_end - 1e-12:
+		step = min(h, x_end - x)
+		x1 = x + step
+		slope = f(x, y)
+		y_pred = y + step*slope							# predictor (Forward Euler)
+		y_new = y + 0.5*step*(slope + f(x1, y_pred))		# corrector (trapezoidal)
+		if tolerance is not None:
+			for i in range(100):
+				y_next = y + 0.5*step*(slope + f(x1, y_new))
+				change = abs(y_next - y_new)
+				y_new = y_next
+				if change < tolerance:
+					break
+		x = x1
+		y = y_new
+		xs.append(x)
+		ys.append(y)
+	return xs, ys
+
+def RK4(f, x0, Y0, x_end, h):		# Runge-Kutta 4 for dY/dx = f(x, Y); returns lists xs, ys
+	# Y0 is a float for a 1st order ODE (f returns a float), or a list for a 2nd order ODE / system (f returns a list of slopes, one per variable)
+	# For a list Y0, ys is a list of lists: ys[n] holds all the variables at xs[n]
+	xs = [x0]
+	ys = [Y0]
+	x = x0
+	Y = Y0
+	system = type(Y0) == list
+	while x < x_end - 1e-12:
+		step = min(h, x_end - x)		# last step is clipped to land exactly on x_end
+		if system:
+			n = len(Y)
+			k1 = f(x, Y)
+			k2 = f(x + step/2, [Y[i] + step/2*k1[i] for i in range(n)])
+			k3 = f(x + step/2, [Y[i] + step/2*k2[i] for i in range(n)])
+			k4 = f(x + step, [Y[i] + step*k3[i] for i in range(n)])
+			Y = [Y[i] + step/6*(k1[i] + 2*k2[i] + 2*k3[i] + k4[i]) for i in range(n)]
+		else:
+			k1 = f(x, Y)
+			k2 = f(x + step/2, Y + step/2*k1)
+			k3 = f(x + step/2, Y + step/2*k2)
+			k4 = f(x + step, Y + step*k3)
+			Y = Y + step/6*(k1 + 2*k2 + 2*k3 + k4)
+		x += step
+		xs.append(x)
+		ys.append(Y)
+	return xs, ys
+
+def Save_Data(filename, *columns):		# writes the given equal-length lists as whitespace separated columns to <filename> in the same folder as MyLib.py
+	# readable by gnuplot, e.g. splot 'Q4.dat' using 1:2:3 with lines
+	folder = os.path.dirname(os.path.abspath(__file__))
+	with open(os.path.join(folder, filename), "w") as f:
+		for i in range(len(columns[0])):
+			row = [str(col[i]) for col in columns]
+			f.write(" ".join(row) + "\n")
+
+if __name__ == "__main__":			# Outputs all .py files in the same subfolder to .txt, and the matplotlib figures they make to .png (3D plots also to .dat)
 
 	folder = os.path.dirname(os.path.abspath(__file__))
 	if len(sys.argv) > 1:			# this branch is entered by the loop below, with one script as argument
@@ -743,7 +779,14 @@ if __name__ == "__main__":			# Outputs all .py files in the same subfolder to .t
 		name = os.path.splitext(sys.argv[1])[0]
 		k = 1
 		for num in plt.get_fignums():
-			plt.figure(num).savefig(f"{name}_{k}.png")
+			fig = plt.figure(num)
+			fig.savefig(f"{name}_{k}.png")
+			for ax in fig.axes:				# 3D axes: also saves the plotted line(s) as <script>_<k>.dat, for gnuplot (splot '<file>.dat' using 1:2:3 with lines)
+				if hasattr(ax, "get_zlim"):
+					for j in range(len(ax.lines)):
+						x, y, z = ax.lines[j].get_data_3d()
+						suffix = "" if len(ax.lines) == 1 else f"_{j+1}"
+						Save_Data(f"{name}_{k}{suffix}.dat", x, y, z)
 			k += 1
 	else:
 		for fname in os.listdir(folder):
