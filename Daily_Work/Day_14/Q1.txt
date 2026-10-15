@@ -1,0 +1,7 @@
+Shooting converged in 3 shots
+Converged slope y'(0) = -0.01599999999999999
+Bisection converged in 28 iterations
+Bisection converged in 27 iterations
+Bisection converged in 27 iterations
+Maximum Depression = 0.009999999999999983 m at x = 1.0 m
+Half-Maximum depression = 0.004999999999999991 m at x = 0.328814297914505 m and x = 1.671185702085495 m

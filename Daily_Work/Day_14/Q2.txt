@@ -1,0 +1,4 @@
+Shooting converged in 3 shots
+Converged slope T'(0) = 12.690455737406003
+Bisection converged in 30 iterations
+T = 100 C at x = 4.425261914730072 m
