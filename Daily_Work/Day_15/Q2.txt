@@ -1,0 +1,19 @@
+1D Heat Equation - Explicit Scheme
+Length of rod L = 2.0
+Total time T = 4.0
+Number of spatial intervals Nx = 20
+Number of time steps Nt = 2000
+Spatial step size hx = 0.1
+Time step size ht = 0.002
+Stability ratio alpha = ht / (hx^2) = 0.19999999999999996
+Stability condition (alpha <= 0.5) is satisfied.
+
+Step     Time t     Max Temp (C)    Center Temp (x=1.0) 
+0        0.000      20.0000         0.0000              
+10       0.020      16.4477         8.6201              
+20       0.040      13.9340         10.8464             
+50       0.100      12.0681         12.0681             
+100      0.200      10.1786         10.1786             
+200      0.400      6.2842          6.2842              
+500      1.000      1.4293          1.4293              
+1000     2.000      0.1211          0.1211              
