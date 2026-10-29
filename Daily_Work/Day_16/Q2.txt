@@ -1,0 +1,17 @@
+1D Advection-Diffusion-Reaction PDE - Crank-Nicolson Scheme
+Domain: 0 <= x <= 1, 0 <= t <= 1
+Parameters: a = 2.0, b = -1.0, c = 1.0
+Boundary conditions: u(0, t) = 2.0, u(1, t) = 3.0
+Number of spatial intervals Nx = 50
+Number of time steps Nt = 1000
+Spatial step size hx = 0.0200
+Time step size ht = 0.001000
+Parameters: alpha = 2.500000, beta = -0.012500, gamma = 0.000500
+
+Time t     u(0.0)     u(0.25)      u(0.5)       u(0.75)      u(1.0)    
+0.000      2.0000     2.0576       2.2500       2.5776       3.0000    
+0.050      2.0000     2.2143       2.4579       2.7365       3.0000    
+0.100      2.0000     2.2692       2.5432       2.7987       3.0000    
+0.250      2.0000     2.3021       2.5944       2.8361       3.0000    
+0.500      2.0000     2.3041       2.5976       2.8384       3.0000    
+1.000      2.0000     2.3042       2.5977       2.8384       3.0000    
