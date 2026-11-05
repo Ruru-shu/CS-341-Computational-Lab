@@ -1,8 +1,5 @@
-import math
-import matplotlib.pyplot as plt
 from MyLib import *
 
-# Read data table from data_q4.txt using open()
 data = []
 with open("data_q4.txt", "r") as file:
 	for line in file:
@@ -14,7 +11,6 @@ xs = [row[0] for row in data]
 ys = [row[1] for row in data]
 n = len(xs)
 
-print("Question 4: Non-linear Model Fitting via Linear Regression")
 print("Data Points:")
 print(f"{'x':>8} {'y':>8}")
 for x_val, y_val in zip(xs, ys):

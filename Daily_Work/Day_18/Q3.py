@@ -1,6 +1,5 @@
 from MyLib import *
 
-# Read data table from data_q3.txt using open()
 data = []
 with open("data_q3.txt", "r") as file:
 	for line in file:
@@ -8,7 +7,6 @@ with open("data_q3.txt", "r") as file:
 		if parts:
 			data.append([float(parts[0]), float(parts[1])])
 
-print("Question 3: Lagrange Interpolation")
 print("Input Data Table:")
 print(f"{'x':>8} {'y(x)':>10}")
 for x_val, y_val in data:
@@ -31,4 +29,3 @@ for order in range(1, n_points):
 best_estimate = Lagrange_Interp(data, x_target, order=n_points - 1)
 print("-" * 50)
 print(f"Best Estimate for y(x = {x_target}): {best_estimate:.6f}")
-print("Note: The data points strictly satisfy y = 5x; hence all polynomial orders yield 33.5.")
