@@ -27,6 +27,8 @@
   - [4 · Iterative Methods — Jacobi & Gauss-Seidel](#4--iterative-methods--jacobi--gauss-seidel)
   - [5 · Root Finding](#5--root-finding)
   - [6 · Numerical Integration](#6--numerical-integration)
+  - [7 · Differential Equations (ODEs & PDEs)](#7--differential-equations-odes--pdes)
+  - [8 · Eigenvalues & Eigenvectors](#8--eigenvalues--eigenvectors)
 - [Reference Book](#-reference-book)
 
 ---
@@ -88,7 +90,9 @@ CS-341-Computational-Lab/
 │   ├── ludecomp.pdf        # LU decomposition & Cholesky
 │   ├── itermat.pdf         # Jacobi, Gauss-Seidel, SOR
 │   ├── root.pdf            # Root finding methods
-│   └── integ.pdf           # Numerical integration
+│   ├── integ.pdf           # Numerical integration
+│   ├── diffeq.pdf          # ODEs, BVPs, and PDEs (Heat & ADR equations)
+│   └── eigv.pdf            # Eigenvalues & Eigenvectors (Power Iteration & Deflation)
 │
 ├── MyLib.py                # Core library: PRNG, MyComplex
 ├── MyLib_Advanced.py       # Extended library: Solve, Newton-Raphson,
@@ -96,8 +100,9 @@ CS-341-Computational-Lab/
 ├── PRNG.py                 # Standalone PRNG module
 ├── PRNG_Matrices.py        # PRNG + matrix utilities
 │
-├── Day_0/ … Day_9/         # Daily class work and assignments
-│   └── (Day_9/MyLib.py)    # Most complete library snapshot
+├── Daily_Work/
+│   ├── Day_0/ … Day_17/    # Daily class work, scripts, and outputs
+│   └── (Day_17/MyLib.py)   # Most complete library snapshot
 │
 └── README.md
 ```
@@ -454,7 +459,7 @@ $$\mathcal{S}_N = \frac{h}{3}\!\left[f(x_0) + 4f(x_1) + 2f(x_2) + 4f(x_3) + \cdo
 
 Weights follow the pattern $1, 4, 2, 4, 2, \ldots, 4, 1$.
 
-$$\mathcal{S}_N = \frac{h}{3}\!\left[f(x_0) + 4f(x_1) + 2f(x_2) + 4f(x_3) + \cdots + 4f(x_{N-1}) + f(x_N)\right]$$
+Error bound: $\displaystyle\lvert\mathcal{S}_N - \mathcal{I}\rvert \le \frac{(b-a)^5}{180N^4}\,\lvert f^{(4)}\rvert_{\max}$
 
 Useful identity: $\mathcal{S}_{2N} = \tfrac{2}{3}\mathcal{M}_N + \tfrac{1}{3}\mathcal{T}_N$
 
@@ -496,6 +501,224 @@ For $\int_a^b$, change variables: $t = \tfrac{b-a}{2}x + \tfrac{b+a}{2}$.
 | 120 | 0.735 758 88 | **6** | **0.735 758 88** ✓ |
 
 Gaussian quadrature matches Simpson at $N=120$ using only **6 points**.
+
+---
+
+### 7 · Differential Equations (ODEs & PDEs)
+
+> 📄 [`CS-341-slides/diffeq.pdf`](CS-341-slides/diffeq.pdf)
+
+Covers initial value problems (IVPs) for ordinary differential equations, boundary value problems (BVPs) via shooting and finite difference schemes, and partial differential equations (PDEs) focusing on 1D diffusion/heat equations and Crank-Nicolson schemes.
+
+#### Initial Value Problems (IVPs)
+
+First-order ODE: $\displaystyle \frac{dy}{dx} = f(x, y), \quad y(x_0) = y_0$
+
+Higher-order ODEs are converted into coupled systems of first-order ODEs. For example, a damped harmonic oscillator $\ddot{x} + \mu \dot{x} + \omega^2 x = 0$:
+$$\frac{dx}{dt} = v, \qquad \frac{dv}{dt} = -\mu v - \omega^2 x, \quad x(t_0) = x_0, \ v(t_0) = v_0$$
+
+#### Forward (Explicit) Euler
+
+Evaluates the derivative at the beginning of the step:
+$$y_{n+1} = y_n + h f(x_n, y_n) + O(h^2)$$
+
+- **Local truncation error:** $O(h^2)$; **global accumulation error:** $O(h)$.
+- **Stability issue:** Strictly conditionally stable. The solution can rapidly diverge (blow up) unless step size $h$ is sufficiently small.
+
+#### Backward (Implicit) Euler
+
+Evaluates the derivative at the *end* of the step:
+$$y_{n+1} = y_n + h f(x_{n+1}, y_{n+1})$$
+
+- Implicit algebraic equation in $y_{n+1}$ — solved via root-finding (Newton-Raphson) at every step:
+  $$G(z) = z - y_n - h f(x_{n+1}, z) = 0$$
+- **Unconditionally stable:** Allows significantly larger step sizes without numerical divergence, compensating for the extra computational cost per step.
+
+#### Predictor-Corrector Method (Heun's)
+
+Combines forward Euler as a *predictor* with the trapezoidal rule as a *corrector*:
+1. **Predict:** $y^p_{n+1} = y_n + h f(x_n, y_n) = y_n + k_1$
+2. **Correct:** $y^c_{n+1} = y_n + \frac{h}{2}\!\left[f(x_n, y_n) + f(x_{n+1}, y^p_{n+1})\right] = y_n + \frac{1}{2}(k_1 + k_2)$
+- Local error: $O(h^3)$. Improves accuracy and stability over plain forward Euler.
+
+#### Runge-Kutta 4th Order (RK4)
+
+The primary workhorse for ODE initial value problems. Approximates the integral $\int_{x_n}^{x_n+h} f(x, y)\,dx$ using a Simpson-like weighted average of four trial slopes:
+
+$$k_1 = h f(x_n, y_n)$$
+$$k_2 = h f\!\left(x_n + \frac{h}{2},\, y_n + \frac{k_1}{2}\right)$$
+$$k_3 = h f\!\left(x_n + \frac{h}{2},\, y_n + \frac{k_2}{2}\right)$$
+$$k_4 = h f(x_n + h,\, y_n + k_3)$$
+
+$$y_{n+1} = y_n + \frac{1}{6}\!\left(k_1 + 2k_2 + 2k_3 + k_4\right) + O(h^5)$$
+
+- Global error is $O(h^4)$, enabling high accuracy even with relatively coarse steps.
+- **Coupled Systems:** Extended directly to $m$-dimensional state vectors $\mathbf{Y} = [y_1, y_2, \ldots, y_m]^T$:
+  $$\mathbf{Y}_{n+1} = \mathbf{Y}_n + \frac{1}{6}\!\left(\mathbf{k}_1 + 2\mathbf{k}_2 + 2\mathbf{k}_3 + \mathbf{k}_4\right)$$
+  Used to simulate non-linear dynamical and chaotic systems, including the **Lorenz attractor** ($\dot{x} = \sigma(y-x), \dot{y} = x(\rho-z)-y, \dot{z} = xy-\beta z$) and **Rössler system**.
+
+#### Boundary Value Problems (BVPs)
+
+Second-order ODE with conditions specified at boundaries $x = a$ and $x = b$:
+$$y'' = f(x, y, y'), \quad a \le x \le b$$
+- **Dirichlet conditions:** $y(a) = \alpha, \quad y(b) = \beta$
+- **Neumann conditions:** $y'(a) = Y_0, \quad y'(b) = Y_N$
+
+##### 1. Shooting Method
+Transforms the BVP into an initial value problem by guessing the initial slope $z(a) = y'(a) = \zeta$:
+1. Solve the coupled system $\frac{dy}{dx} = z, \ \frac{dz}{dx} = f(x, y, z)$ using RK4 from $x = a$ to $x = b$.
+2. Bracket the target boundary value $\beta$: find $\zeta_l$ (undershooting $y_{\zeta_l}(b) < \beta$) and $\zeta_h$ (overshooting $y_{\zeta_h}(b) > \beta$).
+3. Interpolate the next slope via Lagrange interpolation:
+   $$\zeta = \zeta_l + \frac{\zeta_h - \zeta_l}{y_{\zeta_h}(b) - y_{\zeta_l}(b)}\!\left(\beta - y_{\zeta_l}(b)\right)$$
+4. Repeat until $|y_\zeta(b) - \beta| < \varepsilon$.
+
+##### 2. Finite Difference / Finite Element Method (1D)
+Discretizes the domain $x_n = a + n h$ with $h = (b-a)/N$. Approximates $y''(x_n)$ via central differences:
+$$y''(x_n) \approx \frac{y_{n+1} - 2y_n + y_{n-1}}{h^2}$$
+For interior nodes $n = 1, \dots, N-1$, this yields a tridiagonal, symmetric positive-definite linear system:
+$$-y_{n-1} + 2y_n - y_{n+1} = -h^2 f(x_n)$$
+with Dirichlet boundary conditions $\alpha, \beta$ shifted to the right-hand side. Solved directly using **Cholesky decomposition** ($O(N)$ operations).
+
+#### Partial Differential Equations (PDEs)
+
+General linear 2nd-order PDE in two variables $A u_{xx} + B u_{xy} + C u_{yy} = F$:
+- **Elliptic ($B^2 - 4AC < 0$):** Steady-state equilibrium (Laplace $\nabla^2 u = 0$, Poisson $\nabla^2 u = \rho$).
+- **Parabolic ($B^2 - 4AC = 0$):** Diffusion and dissipation ($u_t = D u_{xx}$).
+- **Hyperbolic ($B^2 - 4AC > 0$):** Wave propagation ($u_{tt} = c^2 u_{xx}$).
+
+##### 1D Heat / Diffusion Equation ($u_t = u_{xx}$)
+Grid discretization: $x_i = i h_x$, $t_j = j h_t$, with parameter $\alpha = h_t / h_x^2$.
+
+- **Explicit FTCS (Forward-Time Central-Space):**
+  $$\frac{u_{i, j+1} - u_{i, j}}{h_t} = \frac{u_{i+1, j} - 2u_{i, j} + u_{i-1, j}}{h_x^2} \implies u_{i, j+1} = \alpha u_{i-1, j} + (1 - 2\alpha)u_{i, j} + \alpha u_{i+1, j}$$
+  In vector form: $\mathbf{V}_{j+1} = A \mathbf{V}_j$.
+  > ⚠ **Stability criterion:** Requires $\alpha = \frac{h_t}{h_x^2} \le \frac{1}{2}$. If $h_t > \frac{1}{2}h_x^2$, numerical oscillations grow exponentially.
+
+- **Implicit BTCS (Backward-Time Central-Space):**
+  Uses backward time derivative: $-\alpha u_{i-1, j} + (1 + 2\alpha)u_{i, j} - \alpha u_{i+1, j} = u_{i, j-1}$.
+  In vector form: $A \mathbf{V}_j = \mathbf{V}_{j-1}$. Unconditionally stable for all $\alpha$.
+
+- **Crank-Nicolson Scheme:**
+  Averages central spatial differences between time steps $j$ and $j-1$:
+  $$\frac{u_{i, j} - u_{i, j-1}}{h_t} = \frac{1}{2}\!\left[\frac{u_{i+1, j} - 2u_{i, j} + u_{i-1, j}}{h_x^2} + \frac{u_{i+1, j-1} - 2u_{i, j-1} + u_{i-1, j-1}}{h_x^2}\right]$$
+  In matrix notation:
+  $$(2I + \alpha B)\mathbf{V}_j = (2I - \alpha B)\mathbf{V}_{j-1}$$
+  where $B$ is the tridiagonal matrix with main diagonal $2$ and off-diagonals $-1$.
+  - **Properties:** Unconditionally stable, second-order accurate in both time and space ($O(h_t^2 + h_x^2)$).
+  - Generalizes directly to **Advection-Diffusion-Reaction (ADR)** equations: $u_t = a u_{xx} + b u_x + c u$.
+
+#### Code — `MyLib.py`
+
+```python
+def RK4(f, x0, Y0, x_end, h):
+    """Runge-Kutta 4th order for 1st order ODE or coupled system dY/dx = f(x, Y)."""
+    xs, ys = [x0], [Y0]
+    x, Y = x0, Y0
+    system = isinstance(Y0, list)
+    while x < x_end - 1e-12:
+        step = min(h, x_end - x)
+        if system:
+            n = len(Y)
+            k1 = f(x, Y)
+            k2 = f(x + step/2, [Y[i] + step/2 * k1[i] for i in range(n)])
+            k3 = f(x + step/2, [Y[i] + step/2 * k2[i] for i in range(n)])
+            k4 = f(x + step,   [Y[i] + step   * k3[i] for i in range(n)])
+            Y = [Y[i] + (step/6) * (k1[i] + 2*k2[i] + 2*k3[i] + k4[i]) for i in range(n)]
+        else:
+            k1 = f(x, Y)
+            k2 = f(x + step/2, Y + step/2 * k1)
+            k3 = f(x + step/2, Y + step/2 * k2)
+            k4 = f(x + step,   Y + step   * k3)
+            Y += (step/6) * (k1 + 2*k2 + 2*k3 + k4)
+        x += step
+        xs.append(x)
+        ys.append(Y)
+    return xs, ys
+```
+
+---
+
+### 8 · Eigenvalues & Eigenvectors
+
+> 📄 [`CS-341-slides/eigv.pdf`](CS-341-slides/eigv.pdf)
+
+Addresses the algebraic eigenvalue problem $A\mathbf{x} = \lambda\mathbf{x}$.
+
+#### Numerical Considerations
+
+Analytically, eigenvalues are roots of the characteristic polynomial $p_A(\lambda) = \det(A - \lambda I) = 0$. In practice, polynomial root-finding for eigenvalues is **numerically unstable and ill-conditioned** (Wilkinson's phenomenon: tiny perturbations in matrix entries cause massive changes in polynomial roots). Iterative numerical algorithms exploiting matrix structure (symmetry, sparsity, tridiagonality) are essential.
+
+#### Power Iteration Method
+
+An iterative method designed to extract the **dominant eigenvalue** (largest absolute magnitude $|\lambda_1|$) and its corresponding **dominant eigenvector** $\mathbf{v}_1$.
+
+**Requirements:**
+1. Matrix $A$ has $n$ linearly independent eigenvectors $\{\mathbf{v}_1, \ldots, \mathbf{v}_n\}$.
+2. Eigenvalues can be ordered in magnitude: $|\lambda_1| > |\lambda_2| \ge \cdots \ge |\lambda_n|$.
+
+**Algorithm:**
+1. Choose an initial unit vector $\mathbf{x}_0$ with non-zero projection along $\mathbf{v}_1$ ($\mathbf{x}_0 = \sum c_i \mathbf{v}_i, \ c_1 \ne 0$).
+2. Successive matrix-vector multiplications magnify the dominant component:
+   $$A^k \mathbf{x}_0 = c_1 \lambda_1^k \mathbf{v}_1 + c_2 \lambda_2^k \mathbf{v}_2 + \cdots = c_1 \lambda_1^k \left[\mathbf{v}_1 + \sum_{i=2}^n \frac{c_i}{c_1}\left(\frac{\lambda_i}{\lambda_1}\right)^{\!k}\mathbf{v}_i\right] \approx c_1 \lambda_1^k \mathbf{v}_1$$
+3. Estimate the dominant eigenvalue at each step using the **Rayleigh Quotient**:
+   $$\lambda^{(k)} = \frac{A\mathbf{x}_k \cdot \mathbf{x}_k}{\mathbf{x}_k \cdot \mathbf{x}_k}$$
+4. Re-normalize to prevent numerical underflow/overflow: $\mathbf{x}_{k+1} = \frac{A\mathbf{x}_k}{\|A\mathbf{x}_k\|}$.
+5. Convergence is achieved when $|\lambda^{(k)} - \lambda^{(k-1)}| < \varepsilon$. The rate of convergence is governed by the ratio $\left|\frac{\lambda_2}{\lambda_1}\right|^k$.
+
+#### Matrix Deflation (Wielandt Deflation)
+
+To find subdominant eigenvalues without resolving the full eigenspectrum, deflate the dominant eigenmode from symmetric matrix $A$:
+
+$$A' = A - \lambda_1 \frac{\mathbf{v}_1 \mathbf{v}_1^T}{\|\mathbf{v}_1\|^2}$$
+
+- $A'$ has eigenvalues $0, \lambda_2, \lambda_3, \ldots, \lambda_n$, with the remaining eigenvectors preserved.
+- Applying Power Iteration to $A'$ extracts $\lambda_2$ and $\mathbf{v}_2$.
+- > ⚠ **Caution:** Numerical errors from the dominant mode accumulate into $A'$. Deflation beyond $\lambda_2$ is generally inadvisable without re-orthogonalization.
+
+#### Tridiagonal Toeplitz Matrices
+
+For an $n \times n$ tridiagonal matrix with diagonal $b$, superdiagonal $a$, and subdiagonal $c$:
+$$\lambda_k = b + 2\sqrt{ac}\cos\left(\frac{k\pi}{n+1}\right), \qquad v_{i, k} = 2\left(\frac{c}{a}\right)^{\!i/2}\sin\left(\frac{i k \pi}{n+1}\right), \quad k, i \in \{1, \dots, n\}$$
+
+- When $a = c = -1$ and $b = 2$ (the 1D discrete Laplacian stencil):
+  The recurrence relation $(A\mathbf{v})_i = -v_{i-1} + 2v_i - v_{i+1} = \left[2 - 2\cos\left(\frac{k\pi}{n+1}\right)\right]v_i$ establishes that the formula with $+2\sqrt{ac}\cos(\dots)$ maps index $k$ to spatial mode $k' = n + 1 - k$. The dominant modes found by Power Iteration correspond to high-frequency spatial modes ($k' = 5, 4$) displaying alternating component signs across adjacent coordinates.
+
+#### Code — `MyLib.py`
+
+```python
+def Power_Iteration(A, x0=None, tol=1e-6, max_iter=1000):
+    """
+    Finds dominant eigenvalue and normalized eigenvector of matrix A via Power Iteration.
+    Uses Rayleigh quotient: lambda = (A*x . x) / (x . x).
+    """
+    n = len(A)
+    x = [1.0] * n if x0 is None else [float(v) for v in x0]
+    norm_x = math.sqrt(sum(v * v for v in x))
+    x = [v / norm_x for v in x]
+    
+    lam_prev = 0.0
+    for it in range(1, max_iter + 1):
+        y = [sum(A[i][j] * x[j] for j in range(n)) for i in range(n)]
+        lam = sum(y[i] * x[i] for i in range(n))  # Rayleigh quotient (x is unit vector)
+        norm_y = math.sqrt(sum(v * v for v in y))
+        if norm_y == 0:
+            break
+        x_new = [v / norm_y for v in y]
+        if it > 1 and abs(lam - lam_prev) < tol:
+            return lam, x_new, it
+        lam_prev, x = lam, x_new
+    return lam, x, max_iter
+
+def Matrix_Deflation(A, lam, v):
+    """Wielandt deflation for symmetric matrix: A' = A - lam * (v * v^T) / (v^T * v)."""
+    n = len(A)
+    norm_sq = sum(vi * vi for vi in v)
+    A_def = [row[:] for row in A]
+    for i in range(n):
+        for j in range(n):
+            A_def[i][j] -= lam * (v[i] * v[j]) / norm_sq
+    return A_def
+```
 
 ---
 
