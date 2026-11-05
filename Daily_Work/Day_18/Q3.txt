@@ -1,0 +1,19 @@
+Question 3: Lagrange Interpolation
+Input Data Table:
+       x       y(x)
+    2.00      10.00
+    3.00      15.00
+    5.00      25.00
+    8.00      40.00
+   12.00      60.00
+
+Target point for estimation: x = 6.7
+--------------------------------------------------
+ Order   Degree    Points Used    Estimate y(6.7)
+     1        1              2          33.500000
+     2        2              3          33.500000
+     3        3              4          33.500000
+     4        4              5          33.500000
+--------------------------------------------------
+Best Estimate for y(x = 6.7): 33.500000
+Note: The data points strictly satisfy y = 5x; hence all polynomial orders yield 33.5.

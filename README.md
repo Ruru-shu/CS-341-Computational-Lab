@@ -29,6 +29,7 @@
   - [6 · Numerical Integration](#6--numerical-integration)
   - [7 · Differential Equations (ODEs & PDEs)](#7--differential-equations-odes--pdes)
   - [8 · Eigenvalues & Eigenvectors](#8--eigenvalues--eigenvectors)
+  - [9 · Interpolation & Data Fitting](#9--interpolation--data-fitting)
 - [Reference Book](#-reference-book)
 
 ---
@@ -92,7 +93,8 @@ CS-341-Computational-Lab/
 │   ├── root.pdf            # Root finding methods
 │   ├── integ.pdf           # Numerical integration
 │   ├── diffeq.pdf          # ODEs, BVPs, and PDEs (Heat & ADR equations)
-│   └── eigv.pdf            # Eigenvalues & Eigenvectors (Power Iteration & Deflation)
+│   ├── eigv.pdf            # Eigenvalues & Eigenvectors (Power Iteration & Deflation)
+│   └── datafit.pdf         # Interpolation & Data Fitting (Lagrange & Least Squares)
 │
 ├── MyLib.py                # Core library: PRNG, MyComplex
 ├── MyLib_Advanced.py       # Extended library: Solve, Newton-Raphson,
@@ -101,8 +103,8 @@ CS-341-Computational-Lab/
 ├── PRNG_Matrices.py        # PRNG + matrix utilities
 │
 ├── Daily_Work/
-│   ├── Day_0/ … Day_17/    # Daily class work, scripts, and outputs
-│   └── (Day_17/MyLib.py)   # Most complete library snapshot
+│   ├── Day_0/ … Day_18/    # Daily class work, scripts, and outputs
+│   └── (Day_18/MyLib.py)   # Most complete library snapshot
 │
 └── README.md
 ```
@@ -718,6 +720,108 @@ def Matrix_Deflation(A, lam, v):
         for j in range(n):
             A_def[i][j] -= lam * (v[i] * v[j]) / norm_sq
     return A_def
+```
+
+---
+
+### 9 · Interpolation & Data Fitting
+
+> 📄 [`CS-341-slides/datafit.pdf`](CS-341-slides/datafit.pdf)
+
+Addresses reconstructing continuous functions from discrete measurements $f(x_i) = y_i$ (interpolation) and finding optimal mathematical models describing noisy experimental data (least-squares curve fitting).
+
+#### Interpolation vs. Extrapolation
+
+- **Interpolation:** Estimating $y(x)$ for $x$ strictly bounded within the data domain $[x_{\min}, x_{\max}]$.
+- **Extrapolation:** Estimating $y(x)$ outside the domain $[x_{\min}, x_{\max}]$. Highly prone to massive errors and divergence unless backed by exact physical laws.
+
+#### Lagrange Interpolating Polynomial
+
+Given $N+1$ distinct points $(x_0, y_0), (x_1, y_1), \ldots, (x_N, y_N)$, there exists a unique polynomial $P_N(x)$ of degree at most $N$ passing through all points:
+
+$$P_N(x) = \sum_{i=0}^N y_i L_i(x), \qquad L_i(x) = \prod_{\substack{k=0 \\ k \ne i}}^N \frac{x - x_k}{x_i - x_k}$$
+
+- **Lagrange basis property:** $L_i(x_j) = \delta_{ij}$, ensuring $P_N(x_i) = y_i$ exactly.
+- **Degree selection:** An order-$m$ polynomial requires $m+1$ points. If $m < N$, choosing the $m+1$ points closest to the evaluation point $x$ minimizes interpolation error.
+
+#### Linear Regression & Least Squares
+
+Given $N$ data points $(x_i, y_i)$ with measurement uncertainties $\sigma_i$ (default $\sigma_i = 1$), fit a straight line $f(x) = a_1 + a_2 x$ by minimizing the weighted sum of squared residuals:
+
+$$\chi^2 = \sum_{i=1}^N \left(\frac{y_i - a_1 - a_2 x_i}{\sigma_i}\right)^{\!2}$$
+
+Setting $\frac{\partial \chi^2}{\partial a_1} = 0$ and $\frac{\partial \chi^2}{\partial a_2} = 0$ yields the normal equations:
+
+$$S = \sum_{i=1}^N \frac{1}{\sigma_i^2}, \quad S_x = \sum_{i=1}^N \frac{x_i}{\sigma_i^2}, \quad S_y = \sum_{i=1}^N \frac{y_i}{\sigma_i^2}, \quad S_{xx} = \sum_{i=1}^N \frac{x_i^2}{\sigma_i^2}, \quad S_{xy} = \sum_{i=1}^N \frac{x_i y_i}{\sigma_i^2}, \quad S_{yy} = \sum_{i=1}^N \frac{y_i^2}{\sigma_i^2}$$
+
+$$\Delta = S S_{xx} - S_x^2$$
+
+$$a_1 = \frac{S_{xx} S_y - S_x S_{xy}}{\Delta} \quad (\text{intercept}), \qquad a_2 = \frac{S S_{xy} - S_x S_y}{\Delta} \quad (\text{slope})$$
+
+Parameter error estimates:
+$$\sigma_{a_1} = \sqrt{\frac{S_{xx}}{\Delta}}, \qquad \sigma_{a_2} = \sqrt{\frac{S}{\Delta}}$$
+
+#### Pearson's Correlation Coefficient ($r^2$)
+
+Quantifies the linear association between $x$ and $y$:
+
+$$r^2 = \frac{(S S_{xy} - S_x S_y)^2}{(S S_{xx} - S_x^2)(S S_{yy} - S_y^2)}, \qquad 0 \le r^2 \le 1$$
+
+- $r^2 \to 1$: Strong linear correlation and superior fit quality.
+- $r^2 \to 0$: Poor or nonexistent linear relationship.
+
+#### Non-Linear Model Linearization
+
+Many non-linear physical laws transform into linear forms via logarithms:
+
+| Model | Formula | Linear Transformation | Linear Variables | Recovered Parameters |
+|---|---|---|---|---|
+| **Exponential** | $y = a e^{bx}$ | $\ln(y) = \ln(a) + bx$ | $Y = \ln(y), \ X = x$ | $a = e^{A_1}, \ b = A_2$ |
+| **Exponential Decay** | $y = a e^{-bx}$ | $\ln(y) = \ln(a) - bx$ | $Y = \ln(y), \ X = x$ | $a = e^{A_1}, \ b = -A_2$ |
+| **Power Law** | $y = a x^b$ | $\ln(y) = \ln(a) + b\ln(x)$ | $Y = \ln(y), \ X = \ln(x)$ | $a = e^{A_1}, \ b = A_2$ |
+| **Logarithmic** | $y = a + b\ln(x)$ | $y = a + b\ln(x)$ | $Y = y, \ X = \ln(x)$ | $a = A_1, \ b = A_2$ |
+
+The model producing a higher Pearson $r^2$ provides the statistically superior representation of the physical process.
+
+#### General Polynomial & Orthogonal Fitting
+
+- **Polynomial model:** $f(x) = \sum_{k=0}^m a_k x^k$ minimizes $R^2 = \sum (y_i - f(x_i))^2$, leading to the normal matrix system $X \mathbf{a} = \mathbf{Y}$ ($X_{jk} = \sum x_i^{j+k}$, solved via matrix inversion/LU).
+- **Orthogonal polynomials:** High-degree monomial fitting suffers from Runge's phenomenon and ill-conditioned Vandermonde matrices. Using orthogonal basis functions (Legendre polynomials on $[-1, 1]$, Hermite on $(-\infty, \infty)$, Laguerre on $[0, \infty)$) eliminates cross-correlation terms and yields well-conditioned diagonal systems.
+
+#### Code — `MyLib.py`
+
+```python
+def Lagrange_Interp(dataset, x_eval, order=None):
+    """Lagrange interpolation of order m (uses m+1 nearest points if order specified)."""
+    pts = [[float(row[0]), float(row[1])] for row in dataset]
+    if order is not None and order + 1 < len(pts):
+        pts.sort(key=lambda p: abs(p[0] - x_eval))
+        pts = pts[:order + 1]
+    m = len(pts)
+    y_eval = 0.0
+    for i in range(m):
+        term = pts[i][1]
+        for k in range(m):
+            if k != i:
+                term *= (x_eval - pts[k][0]) / (pts[i][0] - pts[k][0])
+        y_eval += term
+    return y_eval
+
+def Linear_Regression(x, y, sigmas=None):
+    """Weighted/unweighted linear fit y = a1 + a2*x, returning a1, a2, Pearson r^2, sig_a1, sig_a2."""
+    n = len(x)
+    w = [1.0] * n if sigmas is None else [1.0 / (s * s) for s in sigmas]
+    S = sum(w)
+    Sx, Sy = sum(w[i] * x[i] for i in range(n)), sum(w[i] * y[i] for i in range(n))
+    Sxx = sum(w[i] * x[i] * x[i] for i in range(n))
+    Sxy = sum(w[i] * x[i] * y[i] for i in range(n))
+    Syy = sum(w[i] * y[i] * y[i] for i in range(n))
+    Delta = S * Sxx - Sx * Sx
+    a1 = (Sxx * Sy - Sx * Sxy) / Delta
+    a2 = (S * Sxy - Sx * Sy) / Delta
+    sig_a1, sig_a2 = math.sqrt(Sxx / Delta), math.sqrt(S / Delta)
+    r2 = ((S * Sxy - Sx * Sy) ** 2) / ((S * Sxx - Sx * Sx) * (S * Syy - Sy * Sy))
+    return a1, a2, r2, sig_a1, sig_a2
 ```
 
 ---

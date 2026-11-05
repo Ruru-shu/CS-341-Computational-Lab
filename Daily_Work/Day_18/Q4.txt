@@ -1,0 +1,33 @@
+Question 4: Non-linear Model Fitting via Linear Regression
+Data Points:
+       x        y
+    2.50    13.00
+    3.50    11.00
+    5.00     8.50
+    6.00     8.20
+    7.50     7.00
+   10.00     6.20
+   12.50     5.20
+   15.00     4.80
+   17.50     4.60
+   20.50     4.30
+
+1. Power Law Model: y = a * x^b
+   Transformed Equation: ln(y) = 3.0467 + (-0.5374) * ln(x)
+   Parameters: a = 21.0464, b = -0.5374
+   Fitted Model: y = 21.0464 * x^(-0.5374)
+   Pearson's r^2 = 0.994518
+
+2. Exponential Model: y = a * e^(-b * x)
+   Transformed Equation: ln(y) = 2.5025 + (-0.0585) * x
+   Parameters: a = 12.2130, b = 0.0585
+   Fitted Model: y = 12.2130 * e^(-0.0585 * x)
+   Pearson's r^2 = 0.901792
+
+============================================================
+Model                Fitted Equation              Pearson r^2 
+------------------------------------------------------------
+Power Law            y = 21.05 * x^(-0.54)        0.994518    
+Exponential          y = 12.21 * e^(-0.058x)      0.901792    
+============================================================
+Conclusion: The Power Law model provides a better fit (r^2 = 0.994518 > 0.901792).
