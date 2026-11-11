@@ -1,4 +1,5 @@
 from MyLib import *
+import matplotlib.pyplot as plt
 
 data = []
 with open("assign9fit.txt", "r") as file:
@@ -38,3 +39,23 @@ print()
 
 print(f"Condition Number kappa(X): {cond_num:.6e}")
 print(f"Coefficient of Determination (Pearson r^2): {r2:.6f}")
+
+# Plotting experimental data and the cubic fit
+xs = [p[0] for p in data]
+ys = [p[1] for p in data]
+
+x_min, x_max = min(xs), max(xs)
+span = x_max - x_min
+x_dense = [x_min + i * (span / 200.0) for i in range(201)]
+y_fit = [sum(coeffs[k] * (x ** k) for k in range(order + 1)) for x in x_dense]
+
+plt.figure(figsize=(10, 6))
+plt.scatter(xs, ys, color="black", zorder=5, label="Experimental Data (assign9fit.txt)")
+plt.plot(x_dense, y_fit, "r-", linewidth=2, label=f"Cubic Polynomial Fit ($r^2={r2:.4f}$)")
+plt.xlabel("x", fontsize=12)
+plt.ylabel("y", fontsize=12)
+plt.title("Question 3: Cubic Least Squares Polynomial Fit", fontsize=14)
+plt.legend(fontsize=11)
+plt.grid(True, linestyle="--", alpha=0.5)
+plt.tight_layout()
+plt.show()
