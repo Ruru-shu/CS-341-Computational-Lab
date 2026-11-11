@@ -1098,6 +1098,215 @@ def Linear_Regression(x, y, sigmas=None):
 	return a1, a2, r2, sig_a1, sig_a2
 
 
+def is_symmetric_matrix(A, tol=1e-9):
+	"""Checks whether square matrix A is symmetric within given tolerance."""
+	n = len(A)
+	for i in range(n):
+		if len(A[i]) != n:
+			return False
+		for j in range(i + 1, n):
+			if not math.isclose(A[i][j], A[j][i], rel_tol=tol, abs_tol=tol):
+				return False
+	return True
+
+
+def Solve_Linear(A, B):
+	"""
+	Solves linear system A * x = B.
+	Uses Cholesky decomposition if A is symmetric (and positive definite),
+	employing the 'CHOLESKY' sentinel string and Cholesky_compress() / Cholesky_read().
+	Otherwise (or if Cholesky fails), falls back to LU decomposition with partial pivoting.
+	"""
+	n = len(A)
+	A_copy = [row[:] for row in A]
+	B_copy = list(B)
+
+	if is_symmetric_matrix(A_copy):
+		try:
+			Cholesky(A_copy)
+			flat = Cholesky_compress(A_copy)
+			y = forward(flat, B_copy)
+			x = backward(Cholesky_read(flat, upper=1), y)
+			return x
+		except Exception:
+			pass
+
+	A_copy = [row[:] for row in A]
+	A_lu, perm = LU(A_copy)
+	y = forward(A_lu, B_copy, perm=perm)
+	x = backward(A_lu, y)
+	return x
+
+
+def Invert_Matrix(A):
+	"""
+	Inverts matrix A column by column.
+	Uses Cholesky decomposition if A is symmetric (and positive definite),
+	employing Sentinel string and Cholesky_compress / Cholesky_read.
+	Otherwise, uses LU decomposition with partial pivoting.
+	"""
+	n = len(A)
+	inv = [[0.0] * n for _ in range(n)]
+
+	if is_symmetric_matrix(A):
+		try:
+			A_copy = [row[:] for row in A]
+			Cholesky(A_copy)
+			flat = Cholesky_compress(A_copy)
+			LT = Cholesky_read(flat, upper=1)
+			for j in range(n):
+				e_j = [1.0 if i == j else 0.0 for i in range(n)]
+				y = forward(flat, e_j)
+				x = backward(LT, y)
+				for i in range(n):
+					inv[i][j] = x[i]
+			return inv
+		except Exception:
+			pass
+
+	A_copy = [row[:] for row in A]
+	A_lu, perm = LU(A_copy)
+	for j in range(n):
+		e_j = [1.0 if i == j else 0.0 for i in range(n)]
+		y = forward(A_lu, e_j, perm=perm)
+		x = backward(A_lu, y)
+		for i in range(n):
+			inv[i][j] = x[i]
+	return inv
+
+
+def Matrix_Condition_Number(A):
+	"""
+	Calculates 2-norm condition number kappa(A) = ||A||_2 * ||A^-1||_2.
+	Uses numpy.linalg.cond if numpy is available, otherwise uses infinity norm.
+	"""
+	try:
+		import numpy as np
+		return float(np.linalg.cond(A))
+	except Exception:
+		inv = Invert_Matrix(A)
+		norm_A = max(sum(abs(x) for x in row) for row in A)
+		norm_inv = max(sum(abs(x) for x in row) for row in inv)
+		return float(norm_A * norm_inv)
+
+
+def Poly_Fit(dataset, order, sigmas=None):
+	"""
+	Fits standard polynomial of degree n:
+	  y = f(x) = a0 + a1 * x + a2 * x^2 + ... + an * x^n
+	by setting up the Hankel / normal equations X * a = Y:
+	  X_mk = sum_i w_i * x_i^(m+k),  Y_m = sum_i w_i * y_i * x_i^m
+	Solves X * a = Y and computes X^-1 using Cholesky (if symmetric positive definite)
+	or LU decomposition. Also computes condition number kappa(X) and Pearson's r^2.
+	"""
+	if isinstance(dataset, (tuple, list)) and len(dataset) == 2 and isinstance(dataset[0], (list, tuple)) and not isinstance(dataset[0][0], (list, tuple)):
+		xs, ys = list(dataset[0]), list(dataset[1])
+		pts = [[float(xs[i]), float(ys[i])] for i in range(len(xs))]
+	else:
+		pts = [[float(row[0]), float(row[1])] for row in dataset]
+
+	n_pts = len(pts)
+	if sigmas is None:
+		w = [1.0] * n_pts
+	else:
+		w = [1.0 / (s * s) for s in sigmas]
+
+	m_dim = order + 1
+	X = [[0.0] * m_dim for _ in range(m_dim)]
+	Y = [0.0] * m_dim
+
+	for m in range(m_dim):
+		for k in range(m_dim):
+			X[m][k] = sum(w[i] * (pts[i][0] ** (m + k)) for i in range(n_pts))
+		Y[m] = sum(w[i] * pts[i][1] * (pts[i][0] ** m) for i in range(n_pts))
+
+	coeffs = Solve_Linear(X, Y)
+	X_inv = Invert_Matrix(X)
+	cond_num = Matrix_Condition_Number(X)
+
+	# Compute r^2
+	y_mean = sum(pts[i][1] for i in range(n_pts)) / n_pts
+	ss_tot = sum((pts[i][1] - y_mean) ** 2 for i in range(n_pts))
+	ss_res = 0.0
+	for x_val, y_val in pts:
+		f_val = sum(coeffs[k] * (x_val ** k) for k in range(m_dim))
+		ss_res += (y_val - f_val) ** 2
+	r2 = 1.0 - (ss_res / ss_tot) if ss_tot > 0 else 1.0
+
+	return coeffs, X, Y, X_inv, cond_num, r2
+
+
+def Modified_Chebyshev_Poly(k, x):
+	"""
+	Evaluates modified Chebyshev basis polynomial phi_k(x) via 3-term recurrence relation:
+	  phi_0(x) = 1
+	  phi_1(x) = 2*x - 1
+	  phi_{m+1}(x) = 2*(2*x - 1)*phi_m(x) - phi_{m-1}(x) = (4*x - 2)*phi_m(x) - phi_{m-1}(x)
+	Avoids generating functions and derivatives.
+	"""
+	if k == 0:
+		return 1.0
+	if k == 1:
+		return 2.0 * x - 1.0
+
+	p_prev2 = 1.0
+	p_prev1 = 2.0 * x - 1.0
+	factor = 4.0 * x - 2.0
+
+	for _ in range(2, k + 1):
+		p_curr = factor * p_prev1 - p_prev2
+		p_prev2 = p_prev1
+		p_prev1 = p_curr
+	return p_prev1
+
+
+def Chebyshev_Fit(dataset, order, sigmas=None):
+	"""
+	Fits data using modified Chebyshev basis functions:
+	  y = f(x) = sum_{k=0}^n a_k * phi_k(x)
+	where phi_k(x) are computed via 3-term recurrence relation.
+	Normal equations:
+	  X_mk = sum_i w_i * phi_m(x_i) * phi_k(x_i),  Y_m = sum_i w_i * y_i * phi_m(x_i)
+	Solves X * a = Y and computes X^-1 using Cholesky (if symmetric positive definite)
+	or LU decomposition. Also computes condition number kappa(X) and Pearson's r^2.
+	"""
+	if isinstance(dataset, (tuple, list)) and len(dataset) == 2 and isinstance(dataset[0], (list, tuple)) and not isinstance(dataset[0][0], (list, tuple)):
+		xs, ys = list(dataset[0]), list(dataset[1])
+		pts = [[float(xs[i]), float(ys[i])] for i in range(len(xs))]
+	else:
+		pts = [[float(row[0]), float(row[1])] for row in dataset]
+
+	n_pts = len(pts)
+	if sigmas is None:
+		w = [1.0] * n_pts
+	else:
+		w = [1.0 / (s * s) for s in sigmas]
+
+	m_dim = order + 1
+	X = [[0.0] * m_dim for _ in range(m_dim)]
+	Y = [0.0] * m_dim
+
+	for m in range(m_dim):
+		for k in range(m_dim):
+			X[m][k] = sum(w[i] * Modified_Chebyshev_Poly(m, pts[i][0]) * Modified_Chebyshev_Poly(k, pts[i][0]) for i in range(n_pts))
+		Y[m] = sum(w[i] * pts[i][1] * Modified_Chebyshev_Poly(m, pts[i][0]) for i in range(n_pts))
+
+	coeffs = Solve_Linear(X, Y)
+	X_inv = Invert_Matrix(X)
+	cond_num = Matrix_Condition_Number(X)
+
+	# Compute r^2
+	y_mean = sum(pts[i][1] for i in range(n_pts)) / n_pts
+	ss_tot = sum((pts[i][1] - y_mean) ** 2 for i in range(n_pts))
+	ss_res = 0.0
+	for x_val, y_val in pts:
+		f_val = sum(coeffs[k] * Modified_Chebyshev_Poly(k, x_val) for k in range(m_dim))
+		ss_res += (y_val - f_val) ** 2
+	r2 = 1.0 - (ss_res / ss_tot) if ss_tot > 0 else 1.0
+
+	return coeffs, X, Y, X_inv, cond_num, r2
+
+
 def Snapshot(folder):		# returns {file name: last modified time} for every file in the folder; two snapshots compared show which files were created or changed
 	snap = {}
 	for name in os.listdir(folder):

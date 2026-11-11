@@ -1,0 +1,18 @@
+Question 1: Library Function for Standard Polynomial Least Square Fitting
+Total data points loaded from assign9fit.txt: 21
+-----------------------------------------------------------------
+Order n = 1:
+  Coefficients [a0, ..., a1]: [0.843152, 0.610649]
+  Condition Number kappa(X): 1.758024e+01
+  Coefficient of determination r^2: 0.532855
+-----------------------------------------------------------------
+Order n = 2:
+  Coefficients [a0, ..., a2]: [0.902495, 0.235851, 0.374799]
+  Condition Number kappa(X): 4.398638e+02
+  Coefficient of determination r^2: 0.547475
+-----------------------------------------------------------------
+Order n = 3:
+  Coefficients [a0, ..., a3]: [0.574659, 4.725861, -11.128218, 7.668678]
+  Condition Number kappa(X): 1.210495e+04
+  Coefficient of determination r^2: 0.972422
+-----------------------------------------------------------------

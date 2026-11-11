@@ -103,8 +103,8 @@ CS-341-Computational-Lab/
 ├── PRNG_Matrices.py        # PRNG + matrix utilities
 │
 ├── Daily_Work/
-│   ├── Day_0/ … Day_18/    # Daily class work, scripts, and outputs
-│   └── (Day_18/MyLib.py)   # Most complete library snapshot
+│   ├── Day_0/ … Day_19/    # Daily class work, scripts, and outputs
+│   └── (Day_19/MyLib.py)   # Most complete library snapshot
 │
 └── README.md
 ```
@@ -783,12 +783,164 @@ Many non-linear physical laws transform into linear forms via logarithms:
 
 The model producing a higher Pearson $r^2$ provides the statistically superior representation of the physical process.
 
-#### General Polynomial & Orthogonal Fitting
+#### Least Squares Polynomial Fitting & Normal Equations
 
-- **Polynomial model:** $f(x) = \sum_{k=0}^m a_k x^k$ minimizes $R^2 = \sum (y_i - f(x_i))^2$, leading to the normal matrix system $X \mathbf{a} = \mathbf{Y}$ ($X_{jk} = \sum x_i^{j+k}$, solved via matrix inversion/LU).
-- **Orthogonal polynomials:** High-degree monomial fitting suffers from Runge's phenomenon and ill-conditioned Vandermonde matrices. Using orthogonal basis functions (Legendre polynomials on $[-1, 1]$, Hermite on $(-\infty, \infty)$, Laguerre on $[0, \infty)$) eliminates cross-correlation terms and yields well-conditioned diagonal systems.
+Given $N$ data points $(x_i, y_i)$ with weights $w_i = 1/\sigma_i^2$ (default $w_i = 1$), fit a standard polynomial of degree $n$:
+
+$$y = f(x) = \sum_{k=0}^n a_k x^k = a_0 + a_1 x + a_2 x^2 + \dots + a_n x^n$$
+
+Minimizing the sum of squared residuals $R^2 = \sum_{i=1}^N w_i \left(y_i - \sum_{k=0}^n a_k x_i^k\right)^2$ with respect to each parameter $a_m$ ($\frac{\partial R^2}{\partial a_m} = 0$) produces the normal equations:
+
+$$\sum_{k=0}^n a_k \left(\sum_{i=1}^N w_i x_i^{m+k}\right) = \sum_{i=1}^N w_i y_i x_i^m, \qquad m = 0, 1, \dots, n$$
+
+In matrix form:
+
+$$X \mathbf{a} = \mathbf{Y} \implies \mathbf{a} = X^{-1} \mathbf{Y}$$
+
+where $X$ is an $(n+1) \times (n+1)$ **Hankel / normal matrix** and $\mathbf{Y}$ is the RHS vector:
+
+$$X = \begin{pmatrix} \sum w_i & \sum w_i x_i & \dots & \sum w_i x_i^n \\ \sum w_i x_i & \sum w_i x_i^2 & \dots & \sum w_i x_i^{n+1} \\ \vdots & \vdots & \ddots & \vdots \\ \sum w_i x_i^n & \sum w_i x_i^{n+1} & \dots & \sum w_i x_i^{2n} \end{pmatrix}, \qquad \mathbf{Y} = \begin{pmatrix} \sum w_i y_i \\ \sum w_i y_i x_i \\ \vdots \\ \sum w_i y_i x_i^n \end{pmatrix}$$
+
+#### Matrix Inversion: Cholesky vs. LU Decomposition
+
+- **Symmetric Matrix:** $X_{mk} = X_{km}$, so $X$ is symmetric. For distinct data points, $X = \Phi^T W \Phi$ is symmetric positive definite.
+- **Inversion via Cholesky Decomposition:** Solves $X \mathbf{x}_j = \mathbf{e}_j$ column-by-column using `Cholesky(A)` (storing the lower triangular factor $L$ with the `"CHOLESKY"` sentinel string in the upper triangle), packed via `Cholesky_compress(A)`, forward-solved with `forward()`, and back-substituted with $L^T = \text{Cholesky\_read(flat, upper=1)}$:
+  $$L \mathbf{y} = \mathbf{e}_j \implies L^T \mathbf{x}_j = \mathbf{y}$$
+- **Fallback to LU:** If the matrix is non-symmetric or fails positive-definiteness due to floating-point roundoff, it falls back to LU decomposition with partial pivoting (`LU(A)`).
+
+#### Matrix Condition Number & Monomial Ill-Conditioning
+
+The condition number $\kappa(X) = \|X\| \cdot \|X^{-1}\|$ measures sensitivity to roundoff errors and perturbation:
+- $\kappa(X) \le 100$: Well-conditioned.
+- $\kappa(X) \ge 10^4$: Ill-conditioned.
+
+For standard polynomial bases $\{1, x, x^2, \dots, x^n\}$, entries grow rapidly as $x^{2n}$, and adjacent rows become nearly linearly dependent. The condition number explodes exponentially ($\kappa \sim 10^4$ for $n=3$, reaching $\sim 10^8 - 10^{16}$ for higher orders), exhausting 64-bit IEEE floating-point precision ($\sim 10^{-16}$) and destabilizing solutions.
+
+#### Modified Chebyshev Polynomial Basis via 3-Term Recurrence
+
+To circumvent ill-conditioning, orthogonal polynomial basis functions are used. For data scattered on $[0, 1]$, **shifted (modified) Chebyshev polynomials** $T_k^*(x) = T_k(2x - 1)$ are employed:
+
+$$y = f(x) = \sum_{k=0}^n a_k \phi_k(x) = a_0 \phi_0(x) + a_1 \phi_1(x) + \dots + a_n \phi_n(x)$$
+
+Explicit low-order polynomials:
+$$\phi_0(x) = 1, \qquad \phi_1(x) = 2x - 1, \qquad \phi_2(x) = 8x^2 - 8x + 1, \qquad \phi_3(x) = 32x^3 - 48x^2 + 18x - 1$$
+
+##### 3-Term Recurrence Relation
+Generating functions require high-order derivatives, which are numerically unsuitable. Instead, $\phi_k(x)$ is computed efficiently via the 3-term recurrence relation:
+
+$$\phi_0(x) = 1$$
+$$\phi_1(x) = 2x - 1$$
+$$\phi_{m+1}(x) = 2(2x - 1)\phi_m(x) - \phi_{m-1}(x) = (4x - 2)\phi_m(x) - \phi_{m-1}(x), \qquad m \ge 1$$
+
+##### Why Chebyshev Basis Improves Conditioning
+The modified Chebyshev normal matrix has entries:
+
+$$X_{mk} = \sum_{i=1}^N \phi_m(x_i) \phi_k(x_i)$$
+
+Due to orthogonality over the domain, cross-terms average out ($\sum \phi_m \phi_k \approx \delta_{mk}$), making $X$ strongly diagonally dominant.
+
+**Experimental comparison on `assign9fit.txt` ($n = 3$):**
+- Standard Polynomial Condition Number: $\kappa(X_{\text{poly}}) \approx 1.2105 \times 10^4$
+- Modified Chebyshev Condition Number: $\kappa(X_{\text{cheb}}) \approx 3.8561$
+- **Improvement:** $> 3139\times$ reduction in condition number, providing exceptional numerical stability for Cholesky inversion while achieving identical goodness of fit ($r^2 = 0.9724$).
 
 #### Code — `MyLib.py`
+
+```python
+def is_symmetric_matrix(A, tol=1e-9):
+    """Checks whether square matrix A is symmetric within given tolerance."""
+    n = len(A)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if not math.isclose(A[i][j], A[j][i], rel_tol=tol, abs_tol=tol):
+                return False
+    return True
+
+def Solve_Linear(A, B):
+    """Solves A*x = B via Cholesky (if symmetric positive definite) or LU with pivoting."""
+    n = len(A)
+    A_copy = [row[:] for row in A]
+    if is_symmetric_matrix(A_copy):
+        try:
+            Cholesky(A_copy)
+            flat = Cholesky_compress(A_copy)
+            y = forward(flat, B)
+            return backward(Cholesky_read(flat, upper=1), y)
+        except Exception:
+            pass
+    A_lu, perm = LU(A_copy)
+    y = forward(A_lu, B, perm=perm)
+    return backward(A_lu, y)
+
+def Invert_Matrix(A):
+    """Inverts matrix A column-by-column using Cholesky (if symmetric) or LU decomposition."""
+    n = len(A)
+    inv = [[0.0] * n for _ in range(n)]
+    if is_symmetric_matrix(A):
+        try:
+            A_copy = [row[:] for row in A]
+            Cholesky(A_copy)
+            flat = Cholesky_compress(A_copy)
+            LT = Cholesky_read(flat, upper=1)
+            for j in range(n):
+                e = [1.0 if i == j else 0.0 for i in range(n)]
+                inv_col = backward(LT, forward(flat, e))
+                for i in range(n):
+                    inv[i][j] = inv_col[i]
+            return inv
+        except Exception:
+            pass
+    A_lu, perm = LU([row[:] for row in A])
+    for j in range(n):
+        e = [1.0 if i == j else 0.0 for i in range(n)]
+        inv_col = backward(A_lu, forward(A_lu, e, perm=perm))
+        for i in range(n):
+            inv[i][j] = inv_col[i]
+    return inv
+
+def Modified_Chebyshev_Poly(k, x):
+    """Evaluates modified Chebyshev basis polynomial phi_k(x) via 3-term recurrence."""
+    if k == 0: return 1.0
+    if k == 1: return 2.0 * x - 1.0
+    p_prev2, p_prev1 = 1.0, 2.0 * x - 1.0
+    factor = 4.0 * x - 2.0
+    for _ in range(2, k + 1):
+        p_curr = factor * p_prev1 - p_prev2
+        p_prev2, p_prev1 = p_prev1, p_curr
+    return p_prev1
+
+def Poly_Fit(dataset, order, sigmas=None):
+    """Fits standard polynomial y = sum_{k=0}^n a_k * x^k via normal equations and Cholesky/LU."""
+    pts = [[float(row[0]), float(row[1])] for row in dataset]
+    n_pts, m_dim = len(pts), order + 1
+    w = [1.0] * n_pts if sigmas is None else [1.0 / (s * s) for s in sigmas]
+    X = [[sum(w[i] * (pts[i][0] ** (m + k)) for i in range(n_pts)) for k in range(m_dim)] for m in range(m_dim)]
+    Y = [sum(w[i] * pts[i][1] * (pts[i][0] ** m) for i in range(n_pts)) for m in range(m_dim)]
+    coeffs = Solve_Linear(X, Y)
+    X_inv = Invert_Matrix(X)
+    cond_num = Matrix_Condition_Number(X)
+    y_mean = sum(p[1] for p in pts) / n_pts
+    ss_tot = sum((p[1] - y_mean) ** 2 for p in pts)
+    ss_res = sum((p[1] - sum(coeffs[k] * (p[0] ** k) for k in range(m_dim))) ** 2 for p in pts)
+    r2 = 1.0 - (ss_res / ss_tot) if ss_tot > 0 else 1.0
+    return coeffs, X, Y, X_inv, cond_num, r2
+
+def Chebyshev_Fit(dataset, order, sigmas=None):
+    """Fits data using modified Chebyshev basis functions via 3-term recurrence and Cholesky/LU."""
+    pts = [[float(row[0]), float(row[1])] for row in dataset]
+    n_pts, m_dim = len(pts), order + 1
+    w = [1.0] * n_pts if sigmas is None else [1.0 / (s * s) for s in sigmas]
+    X = [[sum(w[i] * Modified_Chebyshev_Poly(m, pts[i][0]) * Modified_Chebyshev_Poly(k, pts[i][0]) for i in range(n_pts)) for k in range(m_dim)] for m in range(m_dim)]
+    Y = [sum(w[i] * pts[i][1] * Modified_Chebyshev_Poly(m, pts[i][0]) for i in range(n_pts)) for m in range(m_dim)]
+    coeffs = Solve_Linear(X, Y)
+    X_inv = Invert_Matrix(X)
+    cond_num = Matrix_Condition_Number(X)
+    y_mean = sum(p[1] for p in pts) / n_pts
+    ss_tot = sum((p[1] - y_mean) ** 2 for p in pts)
+    ss_res = sum((p[1] - sum(coeffs[k] * Modified_Chebyshev_Poly(k, p[0]) for k in range(m_dim))) ** 2 for p in pts)
+    r2 = 1.0 - (ss_res / ss_tot) if ss_tot > 0 else 1.0
+    return coeffs, X, Y, X_inv, cond_num, r2
+```
 
 ```python
 def Lagrange_Interp(dataset, x_eval, order=None):

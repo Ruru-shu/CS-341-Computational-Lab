@@ -1,0 +1,46 @@
+Question 4: Modified Chebyshev Polynomial Least Squares Fit
+Loaded 21 data points from assign9fit.txt
+
+Modified Chebyshev Normal Matrix X_cheb:
+    2.100000e+01    0.000000e+00   -5.600000e+00   -1.332268e-15
+    0.000000e+00    7.700000e+00   -6.106227e-16   -2.833600e+00
+   -5.600000e+00   -6.106227e-16    1.046640e+01   -4.440892e-16
+   -1.332268e-15   -2.833600e+00   -4.440892e-16    1.101056e+01
+
+RHS Vector Y_cheb:
+    2.411800e+01
+    2.351000e+00
+   -6.011080e+00
+    1.523576e+00
+
+Inverse Matrix X_cheb^-1 (via Cholesky Decomposition):
+    5.554400e-02    5.822500e-18    2.971857e-02    9.417850e-18
+    5.822500e-18    1.434563e-01    1.305119e-17    3.691890e-02
+    2.971857e-02    1.305119e-17    1.114446e-01    1.144958e-17
+    9.417850e-18    3.691890e-02    1.144958e-17    1.003231e-01
+
+Fitted Coefficients for y = a0*phi0 + a1*phi1 + a2*phi2 + a3*phi3:
+  a0 =       1.160969
+  a1 =       0.393514
+  a2 =       0.046850
+  a3 =       0.239646
+
+Condition Number kappa(X_cheb): 3.856147e+00
+Coefficient of Determination (Pearson r^2): 0.972422
+======================================================================
+COMPARISON & RELATIVE MERIT OF BASIS FUNCTIONS:
+======================================================================
+Standard Polynomial Condition Number kappa(X_poly) : 1.210495e+04
+Modified Chebyshev Condition Number kappa(X_cheb)  : 3.856147e+00
+Condition Number Ratio (kappa_poly / kappa_cheb)  : 3139.13x
+
+Explanation:
+1. Standard polynomial monomials {1, x, x^2, x^3} lead to a Hankel normal matrix
+   where elements grow rapidly (sum x^(m+k)), making rows nearly linearly dependent.
+   This causes severe ill-conditioning and makes matrix inversion susceptible to floating-point roundoff.
+2. In contrast, modified Chebyshev polynomials {phi_0, phi_1, phi_2, phi_3} form an
+   orthogonal basis on [0, 1]. The inner products sum phi_m(x_i)*phi_k(x_i) approx delta_mk,
+   yielding a well-conditioned, diagonally dominant matrix.
+3. Consequently, the condition number for Chebyshev basis is orders of magnitude smaller,
+   ensuring robust, numerically stable matrix inversion via Cholesky decomposition.
+======================================================================
